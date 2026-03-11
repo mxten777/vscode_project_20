@@ -34,7 +34,6 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
 
 const navLinks = [
   { href: '/', label: '특허 검색', icon: Search },
@@ -53,8 +52,7 @@ export function Header({ userEmail }: { userEmail?: string }) {
   useEffect(() => setMounted(true), [])
 
   const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await fetch('/api/auth/signout', { method: 'POST' })
     toast.success('로그아웃되었습니다.')
     router.push('/login')
     router.refresh()
