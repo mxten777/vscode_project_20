@@ -96,18 +96,13 @@ function buildHtmlBody(payload: NotificationPayload): string {
 }
 
 export class EmailProvider implements NotificationProvider {
-  private resend: Resend
-
-  constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY)
-  }
-
   async send(payload: NotificationPayload): Promise<{ success: boolean; error?: string }> {
+    const resend = new Resend(process.env.RESEND_API_KEY)
     try {
       const subject = buildSubject(payload)
       const html = buildHtmlBody(payload)
 
-      const { error } = await this.resend.emails.send({
+      const { error } = await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL ?? 'noreply@patent-platform.com',
         to: [payload.to],
         subject,
