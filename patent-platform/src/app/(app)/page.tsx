@@ -154,9 +154,9 @@ function PatentsPageContent() {
       </div>
 
       {/* 필터 */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           <Select value={status} onValueChange={(v) => { setStatus(v === 'ALL' ? '' : v); setPage(1) }}>
-            <SelectTrigger className="w-30">
+            <SelectTrigger className="w-28 shrink-0">
               <SelectValue placeholder="상태" />
             </SelectTrigger>
             <SelectContent>
@@ -170,7 +170,7 @@ function PatentsPageContent() {
           </Select>
 
           <Select value={source} onValueChange={(v) => { setSource(v === 'ALL' ? '' : v); setPage(1) }}>
-            <SelectTrigger className="w-[27.5]">
+            <SelectTrigger className="w-24 shrink-0">
               <SelectValue placeholder="출처" />
             </SelectTrigger>
             <SelectContent>
@@ -181,14 +181,14 @@ function PatentsPageContent() {
           </Select>
 
           <Input
-            className="w-32.5"
+            className="w-28 shrink-0"
             placeholder="IPC 코드"
             value={ipcCode}
             onChange={(e) => { setIpcCode(e.target.value); setPage(1) }}
           />
 
           <Select value={expiryDays} onValueChange={(v) => { setExpiryDays(v === 'ALL' ? '' : v); setPage(1) }}>
-            <SelectTrigger className="w-32.5">
+            <SelectTrigger className="w-32 shrink-0">
               <SelectValue placeholder="만료 D-day" />
             </SelectTrigger>
             <SelectContent>
@@ -201,9 +201,9 @@ function PatentsPageContent() {
           </Select>
 
           {/* 정렬 */}
-          <div className="flex gap-1">
+          <div className="flex gap-1 shrink-0">
             <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
-              <SelectTrigger className="w-[27.5]">
+              <SelectTrigger className="w-24">
                 <Filter className="h-3.5 w-3.5 mr-1" />
                 <SelectValue />
               </SelectTrigger>
@@ -231,8 +231,47 @@ function PatentsPageContent() {
         </p>
       )}
 
-      {/* 테이블 */}
-      <div className="rounded-xl border shadow-sm overflow-hidden">
+      {/* 모바일 카드 목록 (md 미만) */}
+      <div className="md:hidden space-y-2">
+        {isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl border p-4 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+          ))
+        ) : patents.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground text-sm">검색 결과가 없습니다.</div>
+        ) : (
+          patents.map((patent: Patent) => {
+            const statusInfo = STATUS_BADGES[patent.status] ?? { label: patent.status, variant: 'outline' as const }
+            const daysLabel = formatDaysToExpiry(patent.expiry_date)
+            const isExpiringSoon = patent.days_to_expiry !== null && patent.days_to_expiry !== undefined && patent.days_to_expiry <= 30 && patent.days_to_expiry >= 0
+            return (
+              <Link key={patent.id} href={`/patents/${patent.id}`} className="block rounded-xl border shadow-sm p-4 hover:bg-primary/5 transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm line-clamp-2">{patent.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 font-mono">{patent.source_patent_id}</p>
+                  </div>
+                  <WatchButton patent={patent} />
+                </div>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <Badge variant={statusInfo.variant} className="text-xs">{statusInfo.label}</Badge>
+                  {patent.applicant_name && <span className="text-xs text-muted-foreground truncate max-w-32">{patent.applicant_name}</span>}
+                  {daysLabel && (
+                    <span className={`text-xs ${isExpiringSoon ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>{daysLabel}</span>
+                  )}
+                </div>
+              </Link>
+            )
+          })
+        )}
+      </div>
+
+      {/* 데스크톱 테이블 (md 이상) */}
+      <div className="hidden md:block rounded-xl border shadow-sm overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/40">
             <TableRow className="hover:bg-muted/40">
@@ -281,10 +320,7 @@ function PatentsPageContent() {
                       </Link>
                     </TableCell>
                     <TableCell className="max-w-70">
-                      <Link
-                        href={`/patents/${patent.id}`}
-                        className="hover:underline font-medium line-clamp-2"
-                      >
+                      <Link href={`/patents/${patent.id}`} className="hover:underline font-medium line-clamp-2">
                         {patent.title}
                       </Link>
                     </TableCell>
@@ -294,37 +330,21 @@ function PatentsPageContent() {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {patent.ipc_codes.slice(0, 2).map((code) => (
-                          <Badge key={code} variant="outline" className="text-xs font-mono">
-                            {code}
-                          </Badge>
+                          <Badge key={code} variant="outline" className="text-xs font-mono">{code}</Badge>
                         ))}
                         {patent.ipc_codes.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{patent.ipc_codes.length - 2}
-                          </Badge>
+                          <Badge variant="outline" className="text-xs">+{patent.ipc_codes.length - 2}</Badge>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {patent.filing_date ?? '-'}
-                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{patent.filing_date ?? '-'}</TableCell>
                     <TableCell>
-                      <span
-                        className={
-                          isExpiringSoon
-                            ? 'text-destructive font-semibold text-sm'
-                            : 'text-sm text-muted-foreground'
-                        }
-                      >
+                      <span className={isExpiringSoon ? 'text-destructive font-semibold text-sm' : 'text-sm text-muted-foreground'}>
                         {daysLabel}
                       </span>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <WatchButton patent={patent} />
-                    </TableCell>
+                    <TableCell><Badge variant={statusInfo.variant}>{statusInfo.label}</Badge></TableCell>
+                    <TableCell><WatchButton patent={patent} /></TableCell>
                   </TableRow>
                 )
               })

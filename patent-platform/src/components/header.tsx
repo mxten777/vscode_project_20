@@ -28,6 +28,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -146,6 +147,7 @@ export function Header({ userEmail }: { userEmail?: string }) {
             <SheetContent side="right" className="w-64">
               <SheetHeader>
                 <SheetTitle>Patent Platform</SheetTitle>
+                <SheetDescription className="sr-only">메뉴 네비게이션</SheetDescription>
               </SheetHeader>
               <nav className="flex flex-col gap-1 mt-6">
                 {navLinks.map(({ href, label, icon: Icon }) => (
@@ -181,5 +183,26 @@ export function Header({ userEmail }: { userEmail?: string }) {
         </div>
       </div>
     </header>
+  )
+}
+
+export function BottomNav() {
+  const pathname = usePathname()
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-40 flex md:hidden border-t border-border/60 bg-white/95 dark:bg-background/95 backdrop-blur-md">
+      {navLinks.map(({ href, label, icon: Icon }) => (
+        <Link
+          key={href}
+          href={href}
+          className={cn(
+            'flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors',
+            pathname === href ? 'text-primary' : 'text-muted-foreground',
+          )}
+        >
+          <Icon className={cn('h-5 w-5', pathname === href && 'stroke-[2.5px]')} />
+          <span>{label}</span>
+        </Link>
+      ))}
+    </nav>
   )
 }
