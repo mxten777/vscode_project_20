@@ -121,6 +121,13 @@ function SignInForm() {
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? '로그인 중...' : '로그인'}
       </Button>
+
+      <p className="text-center text-xs text-muted-foreground pt-1">
+        데모 계정&nbsp;·&nbsp;
+        <span className="font-medium text-foreground">demo@patent-platform.dev</span>
+        &nbsp;/&nbsp;
+        <span className="font-medium text-foreground">demo1234</span>
+      </p>
     </form>
   )
 }
