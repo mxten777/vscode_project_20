@@ -78,7 +78,7 @@ function WatchButton({ patent }: { patent: Patent }) {
   )
 }
 
-export default function PatentsPage() {
+function PatentsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -367,5 +367,13 @@ export default function PatentsPage() {
         </Pagination>
       )}
     </div>
+  )
+}
+
+export default function PatentsPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <PatentsPageContent />
+    </React.Suspense>
   )
 }
